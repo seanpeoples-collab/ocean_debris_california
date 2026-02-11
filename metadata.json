@@ -1,0 +1,5 @@
+{
+  "name": "Ocean Debris Sonification",
+  "description": "An interactive advocacy art piece transforming ocean pollution data into generative soundscapes and poetic narratives using Google Gemini.",
+  "requestFramePermissions": []
+}
