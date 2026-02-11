@@ -1,4 +1,4 @@
-import { DebrisLocation, DebrisLevel } from './types';
+import { DebrisLocation, DebrisLevel, NarrativeData } from './types';
 
 export const LOCATIONS: DebrisLocation[] = [
   // North Coast
@@ -279,3 +279,32 @@ You are an Eco-Acoustic Analyst. Analyze the provided ocean debris data and musi
 
 Do not use flowery, vague language like "The tide at...". Be technical, sharp, and observational.
 `;
+
+// "Baked-in" narratives to prevent API calls
+export const STATIC_NARRATIVES: Record<string, NarrativeData> = {
+    'ca_nc_2': { // Glass Beach
+        sonicAnalysis: "High-frequency crystalline textures dominate. The density of glass creates a sharp, brittle soundscape, though the dissonance is mitigated by the material's inert nature.",
+        ecologicalReality: "This site contains extreme concentrations of sea glass (90%). While visually striking, the volume of material displaces natural sand and benthic habitat.",
+        advocacyNote: "Beauty in pollution is a warning, not a justification."
+    },
+    'ca_sc_7': { // Seal Beach
+        sonicAnalysis: "CRITICAL SATURATION. Atonal noise bursts reflect the 1100 items/km² density. The soundscape is choked, mirroring the river mouth's accumulation.",
+        ecologicalReality: "Runoff from the San Gabriel River deposits massive amounts of single-use plastics here. This creates a literal barrier for migratory species.",
+        advocacyNote: "Intercept debris upstream before it reaches the ocean."
+    },
+    'ca_sc_6': { // Long Beach
+        sonicAnalysis: "Mechanical dissonance and heavy, rhythmic thuds. The enclosed harbor traps sound just as it traps debris, creating a dense, reverberant chamber.",
+        ecologicalReality: "Plastic fragments (90%) are confined within the breakwater. They degrade into microplastics rapidly in the stagnant water column.",
+        advocacyNote: "Port infrastructure must integrate active filtration systems."
+    },
+    'ca_sd_5': { // Tijuana River Mouth
+        sonicAnalysis: "Overwhelming chaotic noise. The audio signal is clipping, representing a system in total failure due to the extreme 1250 items/km² density.",
+        ecologicalReality: "Cross-border wastewater and solid waste flows have created a toxic sediment layer. The ecosystem here is functionally collapsed.",
+        advocacyNote: "International cooperation is the only path to restoration."
+    },
+    'ca_ba_4': { // Elkhorn Slough
+        sonicAnalysis: "High dissonance reflects the 410 items/km² density. The sound is murky and dense, suggesting the wetland's struggle to filter this volume of material.",
+        ecologicalReality: "Agricultural plastic runoff accumulates in these critical wetlands. Otters and birds are directly threatened by entanglement in agricultural film.",
+        advocacyNote: "Reduce plastic use in coastal agriculture immediately."
+    }
+};

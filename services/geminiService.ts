@@ -1,15 +1,34 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DebrisLocation, NarrativeData, DebrisLevel } from '../types';
-import { SYSTEM_PROMPT } from '../constants';
+import { SYSTEM_PROMPT, STATIC_NARRATIVES } from '../constants';
 
 // Initialize Gemini Client
-// IMPORTANT: The API key must be provided via the process.env.API_KEY variable.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+// Simple in-memory cache to store narratives during the session
+// This prevents re-fetching data we've already generated, saving tokens.
+const narrativeCache: Record<string, NarrativeData> = {};
+
 export const generateNarrative = async (location: DebrisLocation): Promise<NarrativeData> => {
-  // If no API key, return fallback immediately
+  // 1. Check Cache First
+  if (narrativeCache[location.id]) {
+    console.log("Serving narrative from cache:", location.name);
+    return narrativeCache[location.id];
+  }
+
+  // 2. Check "Baked-in" Static Narratives
+  // This satisfies the request to keep the tool standalone and token-efficient
+  if (STATIC_NARRATIVES[location.id]) {
+    console.log("Serving baked-in narrative:", location.name);
+    narrativeCache[location.id] = STATIC_NARRATIVES[location.id];
+    return STATIC_NARRATIVES[location.id];
+  }
+
+  // 3. If no API key is present, use the Enhanced Local Engine directly.
   if (!process.env.API_KEY) {
-    return generateFallbackNarrative(location, "System Offline: API Key Missing");
+    const localData = generateLocalNarrative(location);
+    narrativeCache[location.id] = localData;
+    return localData;
   }
 
   try {
@@ -28,7 +47,7 @@ export const generateNarrative = async (location: DebrisLocation): Promise<Narra
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_PROMPT,
-        temperature: 0.5, // Lower temperature for more analytical/factual output
+        temperature: 0.6, 
         responseMimeType: "application/json",
         responseSchema: {
             type: Type.OBJECT,
@@ -42,51 +61,39 @@ export const generateNarrative = async (location: DebrisLocation): Promise<Narra
       }
     });
 
-    // Handle the JSON response
     const jsonText = response.text;
     if (jsonText) {
-        return JSON.parse(jsonText) as NarrativeData;
+        const data = JSON.parse(jsonText) as NarrativeData;
+        // Cache the successful result
+        narrativeCache[location.id] = data;
+        return data;
     }
     
     throw new Error("Empty response");
 
   } catch (error: any) {
-    // Determine the nature of the error for the prefix
-    let statusPrefix = "Signal Interrupted";
-    
-    // Robust Error Detection
+    // Determine the nature of the error
     const errorCode = error.status || error.response?.status || error.error?.code;
     const errorBody = JSON.stringify(error, Object.getOwnPropertyNames(error)).toLowerCase();
-    const errorMessage = (error.message || '').toLowerCase();
     
-    // Check for Quota Exceeded (429)
+    let isQuotaError = false;
+    
     if (
         errorCode == 429 || 
         errorBody.includes("429") || 
         errorBody.includes("quota") || 
-        errorBody.includes("exhausted") ||
-        errorMessage.includes("quota")
+        errorBody.includes("exhausted")
     ) {
-        statusPrefix = "Offline Mode (Quota Exceeded)";
-        // Warn instead of Error for expected quota limits to keep console clean
-        console.warn("Gemini API Quota Exceeded. Switching to offline simulation.");
-    } 
-    // Check for Network/Connection issues
-    else if (
-        errorBody.includes("network") || 
-        errorBody.includes("fetch") ||
-        errorMessage.includes("network")
-    ) {
-        statusPrefix = "Connection Lost";
-        console.warn("Gemini API Connection Lost. Switching to offline simulation.");
-    } 
-    // Unexpected errors
-    else {
-        console.error("Gemini API Error:", error);
+        isQuotaError = true;
+        console.warn("Gemini API Quota Exceeded. Switching to local engine.");
+    } else {
+        console.warn("Gemini API Connection Issue. Switching to local engine.");
     }
 
-    // Return deterministic fallback data so the app remains usable
-    return generateFallbackNarrative(location, statusPrefix);
+    // Fallback to Local Engine
+    const localData = generateLocalNarrative(location, isQuotaError ? "Offline Mode (Quota)" : "Signal Interrupted");
+    narrativeCache[location.id] = localData; // Cache the fallback too so UI is stable
+    return localData;
   }
 };
 
@@ -103,46 +110,48 @@ const getMusicalContext = (location: DebrisLocation): string => {
   }
 };
 
-// Deterministic fallback generator for when API is unavailable
-const generateFallbackNarrative = (location: DebrisLocation, prefix: string): NarrativeData => {
-  // Find dominant material
+// --- ENHANCED LOCAL ENGINE (Standalone Mode) ---
+// This generates varied, high-quality narratives without needing the API.
+const generateLocalNarrative = (location: DebrisLocation, prefix: string = ""): NarrativeData => {
+  
+  // 1. Analyze Composition
   const entries = Object.entries(location.composition);
   const dominant = entries.sort((a, b) => b[1] - a[1])[0];
-  const materialName = dominant ? dominant[0] : "debris";
-
+  const materialType = dominant ? dominant[0] : "general";
+  
+  // 2. Select Templates based on Level & Material
   let sonic = "";
   let reality = "";
   let advocacy = "";
 
-  switch (location.level) {
-    case DebrisLevel.LOW:
-        sonic = "Harmonic resonance remains stable. Low-frequency oscillators indicate minimal structural interference.";
-        reality = `Trace amounts of ${materialName} detected. The ecosystem currently maintains its natural rhythm.`;
-        advocacy = "Preserve this balance. Even minor pollution events can disrupt the frequency.";
-        break;
-    case DebrisLevel.MODERATE:
-        sonic = "Texture irregularities detected. Mid-range frequencies are fracturing due to increased density.";
-        reality = `Significant accumulation of ${materialName} is altering the coastal profile of ${location.region}.`;
-        advocacy = "The noise floor is rising. Reduce consumption to restore signal clarity.";
-        break;
-    case DebrisLevel.HIGH:
-        sonic = "Signal saturation imminent. Heavy dissonance reflects the weight of accumulated debris.";
-        reality = `Dense concentrations of ${materialName} (${location.density}/km²) are creating a physical barrier in the environment.`;
-        advocacy = "Urgent action required. The soundscape is becoming uninhabitable.";
-        break;
-    case DebrisLevel.CRITICAL:
-        sonic = "CRITICAL FAILURE. Atonal noise bursts dominate the spectrum, mirroring total overwhelm.";
-        reality = `Toxic levels of ${materialName} have breached safety thresholds.`;
-        advocacy = "System collapse risk high. Immediate large-scale remediation is the only solution.";
-        break;
-    default:
-        sonic = "Data stream analysis inconclusive.";
-        reality = "Unknown material composition.";
-        advocacy = "Manual inspection recommended.";
+  // Sonic Templates
+  if (location.level === DebrisLevel.LOW) {
+      sonic = "Harmonics are stable. The audio reflects a relatively undisturbed seabed, though faint irregularities suggest the presence of micro-pollutants.";
+  } else if (location.level === DebrisLevel.MODERATE) {
+      sonic = "Rhythmic fractures are audible. The soundscape is texturizing, mirroring the way debris interrupts the natural flow of the tide.";
+  } else if (location.level === DebrisLevel.HIGH) {
+      sonic = "High dissonance detected. The density of audio layers corresponds to the physical accumulation of refuse on the shoreline.";
+  } else {
+      sonic = "CRITICAL SATURATION. Atonal noise bursts dominate, representing an ecosystem overwhelmed by foreign material.";
+  }
+
+  // Ecological Templates (Context-Aware)
+  if (materialType === 'plastic') {
+      reality = `Polymers are the dominant signature here (${location.composition.plastic}%). These materials fracture into microplastics, entering the food chain at the microscopic level.`;
+      advocacy = "Reduce single-use consumption. Plastic persists indefinitely.";
+  } else if (materialType === 'glass') {
+      reality = `Silicate fragments dominate (${location.composition.glass}%). While chemically inert, sharp edges pose immediate physical risks to local fauna.`;
+      advocacy = "Proper disposal is essential. Even inert materials disrupt habitats.";
+  } else if (materialType === 'fishingGear') {
+      reality = `Ghost gear detected (${location.composition.fishingGear}%). Abandoned nets and lines continue to trap marine life long after being lost.`;
+      advocacy = "Support gear recycling programs. Ghost fishing is a silent killer.";
+  } else {
+      reality = `Mixed debris field detected (${location.density} items/km²). The composition is varied, creating a complex hazard profile for local species.`;
+      advocacy = "Community cleanup efforts are required to mitigate this accumulation.";
   }
 
   return {
-    sonicAnalysis: `[${prefix}] ${sonic}`,
+    sonicAnalysis: prefix ? `[${prefix}] ${sonic}` : sonic,
     ecologicalReality: reality,
     advocacyNote: advocacy
   };

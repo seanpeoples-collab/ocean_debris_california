@@ -88,7 +88,7 @@ const Controls: React.FC<ControlsProps> = ({
                         step="0.01" 
                         value={volume}
                         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-                        className="w-full h-1 bg-ink-200 rounded-none appearance-none cursor-pointer accent-ink-900"
+                        className="" // Styling handled by global CSS
                     />
                 </div>
             </div>
@@ -118,7 +118,7 @@ const Controls: React.FC<ControlsProps> = ({
                             step="0.01" 
                             value={filterValue}
                             onChange={(e) => onFilterChange(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-ink-200 rounded-none appearance-none cursor-pointer accent-highlight"
+                            className="" // Styling handled by global CSS
                         />
                     </div>
                     
@@ -139,7 +139,7 @@ const Controls: React.FC<ControlsProps> = ({
                             step="0.1" 
                             value={dissonanceValue}
                             onChange={(e) => onDissonanceChange(parseFloat(e.target.value))}
-                            className="w-full h-1 bg-ink-200 rounded-none appearance-none cursor-pointer accent-highlight"
+                            className="" // Styling handled by global CSS
                         />
                     </div>
                 </div>
