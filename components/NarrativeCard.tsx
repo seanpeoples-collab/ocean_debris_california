@@ -11,7 +11,7 @@ interface NarrativeCardProps {
 
 const NarrativeCard: React.FC<NarrativeCardProps> = ({ data, isLoading, locationName }) => {
   return (
-    <div className="bg-white border border-ink-300 p-6 relative min-h-[220px] flex flex-col justify-center shadow-sm">
+    <div className="bg-white border border-ink-300 p-4 md:p-6 relative min-h-[180px] md:min-h-[220px] flex flex-col justify-center shadow-sm">
         <div className="absolute top-0 left-0 bg-ink-900 text-white px-2 py-1 text-[10px] font-mono tracking-widest">
             ANALYSIS // {locationName.toUpperCase()}
         </div>

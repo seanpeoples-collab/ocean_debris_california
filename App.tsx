@@ -82,14 +82,14 @@ function App() {
 
   if (!hasInteracted) {
       return (
-          <div className="h-screen w-screen bg-[#f8fafc] flex items-center justify-center relative overflow-hidden font-mono">
+          <div className="h-[100dvh] w-screen bg-[#f8fafc] flex items-center justify-center relative overflow-hidden font-mono">
               <div className="absolute inset-0 bg-grid-pattern opacity-50"></div>
               
-              <div className="z-10 text-center max-w-md p-10 bg-white border-2 border-ink-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]">
+              <div className="z-10 text-center max-w-md p-6 md:p-10 bg-white border-2 border-ink-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] m-4">
                   <div className="flex justify-center mb-6 text-ink-900">
                       <Waves size={48} strokeWidth={1.5} />
                   </div>
-                  <h1 className="text-3xl font-bold text-ink-900 mb-2 tracking-tighter uppercase">
+                  <h1 className="text-2xl md:text-3xl font-bold text-ink-900 mb-2 tracking-tighter uppercase">
                       CA Coastal Monitor
                   </h1>
                   <div className="w-16 h-1 bg-ink-900 mx-auto mb-6"></div>
@@ -102,7 +102,7 @@ function App() {
                   
                   <button 
                     onClick={handleStart}
-                    className="w-full py-4 bg-ink-900 text-white font-bold tracking-widest hover:bg-ink-800 transition-colors flex items-center justify-center space-x-2"
+                    className="w-full py-4 bg-ink-900 text-white font-bold tracking-widest hover:bg-ink-800 transition-colors flex items-center justify-center space-x-2 active:scale-[0.98]"
                   >
                       <span>INITIALIZE SYSTEM</span>
                       <Radio size={16} className="animate-pulse"/>
@@ -113,20 +113,20 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen bg-paper flex flex-col md:flex-row overflow-hidden text-ink-900">
-      {/* Left Panel: Map */}
-      <div className="flex-1 relative order-2 md:order-1 h-[50vh] md:h-full border-r border-ink-200">
+    <div className="h-[100dvh] w-screen bg-paper flex flex-col md:flex-row overflow-hidden text-ink-900">
+      {/* Panel 1: Map (Top on Mobile, Left on Desktop) */}
+      <div className="relative w-full basis-[45%] md:basis-auto md:flex-1 border-b md:border-b-0 md:border-r border-ink-200 order-1">
          <MapViz 
             activeLocationId={activeLocation?.id || null} 
             onLocationSelect={handleLocationSelect} 
          />
          
-         {/* Floating Visualizer Overlay - Reverted to compact technical size */}
-         <div className="absolute bottom-6 right-6 w-80 h-40 pointer-events-none bg-white/90 border border-ink-300 backdrop-blur shadow-sm">
-             <div className="absolute top-0 left-0 bg-ink-100 px-2 py-0.5 text-[8px] font-mono text-ink-500 uppercase border-b border-r border-ink-200">
+         {/* Floating Visualizer Overlay - Compact on Mobile, Full on Desktop */}
+         <div className="absolute top-3 right-3 w-28 h-12 md:top-auto md:bottom-6 md:right-6 md:w-80 md:h-40 pointer-events-none bg-white/90 border border-ink-300 backdrop-blur shadow-sm z-20 transition-all duration-300">
+             <div className="hidden md:block absolute top-0 left-0 bg-ink-100 px-2 py-0.5 text-[8px] font-mono text-ink-500 uppercase border-b border-r border-ink-200">
                  Audio Spectrum Viz
              </div>
-             <div className="w-full h-full p-2">
+             <div className="w-full h-full p-1 md:p-2">
                  <SonicVisualizer 
                     level={activeLocation?.level || DebrisLevel.LOW} 
                     isPlaying={isPlaying} 
@@ -135,13 +135,13 @@ function App() {
          </div>
       </div>
 
-      {/* Right Panel: Controls & Narrative */}
-      <div className="w-full md:w-[450px] bg-white flex flex-col order-1 md:order-2 z-20 shadow-xl">
-          <div className="p-6 md:p-8 flex-1 overflow-y-auto">
-              <header className="mb-8 flex items-center space-x-3 border-b border-ink-900 pb-4">
+      {/* Panel 2: Controls & Narrative (Bottom on Mobile, Right on Desktop) */}
+      <div className="w-full flex-1 md:flex-none md:w-[450px] bg-white flex flex-col order-2 z-30 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] md:shadow-xl relative overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 md:p-8 pb-8">
+              <header className="mb-6 md:mb-8 flex items-center space-x-3 border-b border-ink-900 pb-3 md:pb-4 select-none">
                   <FileText size={20} className="text-ink-900" />
-                  <h1 className="text-ink-900 font-bold tracking-wider text-xs font-mono uppercase">
-                      Debris Sonification Unit <span className="text-ink-400">// ver. 3.0_CA</span>
+                  <h1 className="text-ink-900 font-bold tracking-wider text-xs font-mono uppercase truncate">
+                      Debris Sonification Unit <span className="text-ink-400 hidden sm:inline">// ver. 3.0_CA</span>
                   </h1>
               </header>
 
@@ -158,7 +158,7 @@ function App() {
                 onDissonanceChange={handleDissonanceChange}
               />
 
-              <div className="mt-8 pt-4">
+              <div className="mt-6 md:mt-8 pt-4">
                   <NarrativeCard 
                     data={narrative} 
                     isLoading={isLoadingNarrative}
@@ -167,7 +167,7 @@ function App() {
               </div>
           </div>
           
-          <div className="p-3 bg-ink-100 text-center text-[10px] font-mono text-ink-500 border-t border-ink-200">
+          <div className="p-2 md:p-3 bg-ink-100 text-center text-[9px] md:text-[10px] font-mono text-ink-500 border-t border-ink-200 shrink-0 select-none">
               CA COASTAL COMMISSION DATA SIMULATION // GOOGLE GEMINI BACKEND
           </div>
       </div>

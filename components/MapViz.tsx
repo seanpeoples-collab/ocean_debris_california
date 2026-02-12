@@ -304,7 +304,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
   }, [geoData, countyData, dimensions, activeLocationId, onLocationSelect, transform, debrisParticles]);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-white">
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-white touch-none">
       {/* Legend / Status Overlay */}
       <div className="absolute top-6 left-6 z-10 pointer-events-none border border-ink-300 bg-white/90 p-3 backdrop-blur shadow-sm rounded-sm">
           <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2">Sector: California Coast</h2>
