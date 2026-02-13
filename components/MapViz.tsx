@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { feature } from 'topojson-client';
 import { DebrisLocation, DebrisLevel } from '../types';
 import { LOCATIONS } from '../constants';
+import { ChevronUp, ChevronDown, Map as MapIcon } from 'lucide-react';
 
 interface MapVizProps {
   activeLocationId: string | null;
@@ -28,6 +29,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
   const [countyData, setCountyData] = useState<any[]>([]);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [transform, setTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
+  const [isLegendOpen, setIsLegendOpen] = useState(true);
   
   // Floating Debris State
   const [debrisParticles, setDebrisParticles] = useState<DebrisParticle[]>([]);
@@ -305,44 +307,62 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
 
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-white touch-none">
-      {/* Legend / Status Overlay */}
-      <div className="absolute top-6 left-6 z-10 pointer-events-none border border-ink-300 bg-white/90 p-3 backdrop-blur shadow-sm rounded-sm">
-          <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2">Sector: California Coast</h2>
-          <div className="flex flex-col space-y-1">
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                 <span className="text-[10px] font-mono text-ink-600">LOW DENSITY</span>
-             </div>
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                 <span className="text-[10px] font-mono text-ink-600">MODERATE</span>
-             </div>
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                 <span className="text-[10px] font-mono text-ink-600">HIGH IMPACT</span>
-             </div>
-          </div>
-          
-          {/* Debris Key */}
-          <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2 mt-4">Particles</h2>
-           <div className="flex flex-col space-y-1">
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 bg-blue-500 opacity-30"></div>
-                 <span className="text-[10px] font-mono text-ink-600">PLASTIC</span>
-             </div>
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 bg-emerald-600 opacity-30"></div>
-                 <span className="text-[10px] font-mono text-ink-600">GLASS</span>
-             </div>
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 bg-slate-600 opacity-30"></div>
-                 <span className="text-[10px] font-mono text-ink-600">METAL</span>
-             </div>
-             <div className="flex items-center space-x-2">
-                 <div className="w-2 h-2 border border-red-600 opacity-30"></div>
-                 <span className="text-[10px] font-mono text-ink-600">GEAR</span>
-             </div>
-          </div>
+      
+      {/* Legend Container - Interactive */}
+      <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-2">
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsLegendOpen(!isLegendOpen)}
+          className="pointer-events-auto flex items-center space-x-2 bg-white/90 backdrop-blur border border-ink-300 px-3 py-1.5 shadow-sm rounded-sm text-ink-900 hover:bg-ink-50 transition-colors"
+        >
+           <MapIcon size={12} className="text-ink-500" />
+           <span className="text-[10px] font-mono font-bold tracking-widest uppercase">
+             {isLegendOpen ? 'HIDE KEY' : 'MAP KEY'}
+           </span>
+           {isLegendOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
+
+        {/* Collapsible Content */}
+        {isLegendOpen && (
+            <div className="pointer-events-auto border border-ink-300 bg-white/90 p-3 backdrop-blur shadow-sm rounded-sm max-w-[200px]">
+                <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2">Sector: CA Coast</h2>
+                <div className="flex flex-col space-y-1">
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-[10px] font-mono text-ink-600">LOW DENSITY</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                        <span className="text-[10px] font-mono text-ink-600">MODERATE</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        <span className="text-[10px] font-mono text-ink-600">HIGH IMPACT</span>
+                    </div>
+                </div>
+                
+                {/* Debris Key */}
+                <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2 mt-4">Particles</h2>
+                <div className="flex flex-col space-y-1">
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 opacity-30"></div>
+                        <span className="text-[10px] font-mono text-ink-600">PLASTIC</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-emerald-600 opacity-30"></div>
+                        <span className="text-[10px] font-mono text-ink-600">GLASS</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-slate-600 opacity-30"></div>
+                        <span className="text-[10px] font-mono text-ink-600">METAL</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 border border-red-600 opacity-30"></div>
+                        <span className="text-[10px] font-mono text-ink-600">GEAR</span>
+                    </div>
+                </div>
+            </div>
+        )}
       </div>
       
       {/* SATELLITE HUD VIEWFINDER OVERLAY */}
