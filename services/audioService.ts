@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - audioService.ts
 import { DebrisLocation, DebrisLevel } from '../types';
 
 class AudioService {

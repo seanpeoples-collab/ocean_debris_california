@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - NarrativeCard.tsx
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NarrativeData } from '../types';
@@ -67,10 +68,10 @@ const NarrativeCard: React.FC<NarrativeCardProps> = ({ data, isLoading, location
                          </p>
                     </div>
 
-                    {/* Advocacy Note */}
+                    {/* Intervention (Advocacy Note) */}
                     <div className="bg-ink-100 p-2 rounded-sm border border-ink-200">
                          <h4 className="flex items-center text-[10px] font-mono font-bold text-ink-900 uppercase mb-1">
-                            <Megaphone size={10} className="mr-1" /> Action Vector
+                            <Megaphone size={10} className="mr-1" /> Intervention
                          </h4>
                          <p className="text-sm text-ink-700 italic font-serif">
                              "{data.advocacyNote}"

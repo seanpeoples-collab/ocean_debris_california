@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - App.tsx
 import React, { useState, useEffect } from 'react';
 import MapViz from './components/MapViz';
 import SonicVisualizer from './components/SonicVisualizer';
@@ -119,6 +120,7 @@ function App() {
          <MapViz 
             activeLocationId={activeLocation?.id || null} 
             onLocationSelect={handleLocationSelect} 
+            stateFips="06" // 06 = California. Change this to 48 for Texas, 15 for Hawaii.
          />
          
          {/* Floating Visualizer Overlay - Compact on Mobile, Full on Desktop */}
@@ -167,8 +169,19 @@ function App() {
               </div>
           </div>
           
-          <div className="p-2 md:p-3 bg-ink-100 text-center text-[9px] md:text-[10px] font-mono text-ink-500 border-t border-ink-200 shrink-0 select-none">
-              CA COASTAL COMMISSION DATA SIMULATION // GOOGLE GEMINI BACKEND
+          <div className="p-3 bg-ink-100 text-center text-[9px] md:text-[10px] font-mono text-ink-500 border-t border-ink-200 shrink-0 select-none flex flex-col gap-1.5">
+              <span>CA COASTAL COMMISSION DATA SIMULATION // GOOGLE GEMINI BACKEND</span>
+              <span className="opacity-75">
+                  CONCEPT & DESIGN BY{' '}
+                  <a 
+                    href="https://seanpeoples.me" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-ink-900 font-bold underline decoration-ink-300 hover:decoration-ink-900 transition-all cursor-pointer pointer-events-auto"
+                  >
+                      SEAN PEOPLES
+                  </a>
+              </span>
           </div>
       </div>
     </div>

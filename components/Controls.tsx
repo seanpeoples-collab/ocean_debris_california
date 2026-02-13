@@ -1,5 +1,6 @@
+// Ocean Debris Sonification Project - Controls.tsx
 import React from 'react';
-import { Play, Square, Volume2, Locate, Sliders } from 'lucide-react';
+import { Play, Square, Volume2, Locate, Sliders, Download } from 'lucide-react';
 import { DebrisLocation } from '../types';
 
 interface ControlsProps {
@@ -26,11 +27,46 @@ const Controls: React.FC<ControlsProps> = ({
     dissonanceValue,
     onDissonanceChange
 }) => {
+    
+    // Function to generate the template file
+    const handleDownloadTemplate = () => {
+        const template = [
+            {
+                "id": "change_me_1",
+                "name": "Example Beach",
+                "region": "County Name",
+                "coordinates": [-97.1234, 26.5678], 
+                "density": 500,
+                "composition": { "plastic": 80, "metal": 5, "glass": 5, "fishingGear": 5, "other": 5 },
+                "level": "HIGH"
+            }
+        ];
+        
+        const dataStr = "export const LOCATIONS: DebrisLocation[] = " + JSON.stringify(template, null, 2) + ";";
+        const blob = new Blob([dataStr], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = "new_map_data_template.ts";
+        link.href = url;
+        link.click();
+    };
+
     if (!activeLocation) {
         return (
-            <div className="h-full flex flex-col items-center justify-center text-ink-400 italic">
-                <Locate size={32} className="mb-3 opacity-50" />
-                <p>Select target vector on map.</p>
+            <div className="h-full flex flex-col items-center justify-center text-ink-400 italic space-y-4">
+                <div className="flex flex-col items-center">
+                    <Locate size={32} className="mb-3 opacity-50" />
+                    <p>Select target vector on map.</p>
+                </div>
+                
+                {/* Developer / Creator Tool */}
+                <button 
+                    onClick={handleDownloadTemplate}
+                    className="mt-8 px-4 py-2 border border-ink-200 text-ink-500 text-xs font-mono hover:bg-ink-50 flex items-center gap-2"
+                >
+                    <Download size={12} />
+                    DOWNLOAD DATA TEMPLATE
+                </button>
             </div>
         );
     }

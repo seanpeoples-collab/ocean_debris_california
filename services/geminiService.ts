@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - geminiService.ts
 import { GoogleGenAI, Type } from "@google/genai";
 import { DebrisLocation, NarrativeData, DebrisLevel } from '../types';
 import { SYSTEM_PROMPT, STATIC_NARRATIVES } from '../constants';
@@ -138,16 +139,16 @@ const generateLocalNarrative = (location: DebrisLocation, prefix: string = ""): 
   // Ecological Templates (Context-Aware)
   if (materialType === 'plastic') {
       reality = `Polymers are the dominant signature here (${location.composition.plastic}%). These materials fracture into microplastics, entering the food chain at the microscopic level.`;
-      advocacy = "Reduce single-use consumption. Plastic persists indefinitely.";
+      advocacy = "Support extended producer responsibility (EPR) laws to hold manufacturers accountable.";
   } else if (materialType === 'glass') {
       reality = `Silicate fragments dominate (${location.composition.glass}%). While chemically inert, sharp edges pose immediate physical risks to local fauna.`;
-      advocacy = "Proper disposal is essential. Even inert materials disrupt habitats.";
+      advocacy = "Coordinate with local land management to restrict illegal dumping access points.";
   } else if (materialType === 'fishingGear') {
       reality = `Ghost gear detected (${location.composition.fishingGear}%). Abandoned nets and lines continue to trap marine life long after being lost.`;
-      advocacy = "Support gear recycling programs. Ghost fishing is a silent killer.";
+      advocacy = "Support organizations conducting deep-water net retrieval and recycling operations.";
   } else {
       reality = `Mixed debris field detected (${location.density} items/km²). The composition is varied, creating a complex hazard profile for local species.`;
-      advocacy = "Community cleanup efforts are required to mitigate this accumulation.";
+      advocacy = "Volunteer with local watershed protection groups to intercept debris at the source.";
   }
 
   return {

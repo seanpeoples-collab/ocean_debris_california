@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - MapViz.tsx
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import { feature } from 'topojson-client';
@@ -8,6 +9,7 @@ import { ChevronUp, ChevronDown, Map as MapIcon } from 'lucide-react';
 interface MapVizProps {
   activeLocationId: string | null;
   onLocationSelect: (location: DebrisLocation) => void;
+  stateFips: string; // '06' = CA, '48' = TX, '15' = HI, etc.
 }
 
 // Debris Particle Definition
@@ -22,7 +24,7 @@ interface DebrisParticle {
   color: string;
 }
 
-const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) => {
+const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect, stateFips }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [geoData, setGeoData] = useState<any>(null);
@@ -121,7 +123,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
 
   }, [activeLocationId]);
 
-  // Load US topology for better CA resolution
+  // Load US topology and filter by stateFips prop
   useEffect(() => {
     fetch('https://unpkg.com/us-atlas@3.0.0/counties-10m.json')
       .then(response => response.json())
@@ -129,17 +131,19 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
         const states = feature(data, data.objects.states) as any;
         const counties = feature(data, data.objects.counties) as any;
         
-        const caFeature = states.features.find((f: any) => f.properties.name === "California");
-        const caCounties = counties.features.filter((f: any) => {
-            if (typeof f.id === 'string') return f.id.startsWith('06');
-            if (typeof f.id === 'number') return Math.floor(f.id / 1000) === 6;
+        // Dynamic Filter based on FIPS code
+        const stateFeature = states.features.find((f: any) => f.id === stateFips);
+        
+        const stateCounties = counties.features.filter((f: any) => {
+            if (typeof f.id === 'string') return f.id.startsWith(stateFips);
+            if (typeof f.id === 'number') return Math.floor(f.id / 1000) === parseInt(stateFips);
             return false;
         });
 
-        setGeoData(caFeature);
-        setCountyData(caCounties);
+        setGeoData(stateFeature);
+        setCountyData(stateCounties);
       });
-  }, []);
+  }, [stateFips]);
 
   // Robust Resize Observer
   useEffect(() => {
@@ -159,13 +163,19 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
   // Zoom Behavior
   useEffect(() => {
     if (!svgRef.current) return;
+    
     const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 15]) // Increased max zoom to see particles better
+      .scaleExtent([1, 100]) // Increased zoom depth significantly for better mobile interaction
+      .translateExtent([[-100, -100], [dimensions.width + 100, dimensions.height + 100]]) // Allow some panning freedom
       .on('zoom', (event) => {
         setTransform(event.transform);
       });
-    d3.select(svgRef.current).call(zoom);
-  }, []);
+
+    d3.select(svgRef.current)
+      .call(zoom)
+      .on("dblclick.zoom", null); // Disable double-click zoom to prevent accidental jumps
+
+  }, [dimensions]); // Re-run when dimensions change to update translateExtent
 
   // Draw Map & Debris
   useEffect(() => {
@@ -202,6 +212,8 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
     const g = svg.append("g");
     g.attr("transform", transform.toString());
 
+    // Adjust projection based on zoom to keep things centered/stable
+    // Auto-fit Logic: This will automatically center on whatever stateFips we load!
     const padding = 50;
     const projection = d3.geoMercator()
       .fitExtent([[padding, padding], [dimensions.width - padding, dimensions.height - padding]], geoData);
@@ -226,7 +238,6 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
       .attr("stroke", "#334155").attr("stroke-width", 1.5 / transform.k).attr("stroke-linejoin", "round");
 
     // --- DEBRIS PARTICLES LAYER ---
-    // Rendered BEFORE locations so they appear "in the water" or on the beach behind the marker
     if (debrisParticles.length > 0) {
         const debrisGroup = g.append("g").attr("class", "debris-layer");
         
@@ -238,9 +249,9 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
                 .attr("d", particle.path)
                 .attr("fill", particle.type === 'fishingGear' ? 'none' : particle.color)
                 .attr("stroke", particle.type === 'fishingGear' ? particle.color : 'none')
-                .attr("stroke-width", 1.5 / transform.k) // Slightly thicker to be visible at low opacity
+                .attr("stroke-width", 1.5 / transform.k) 
                 .attr("transform", `translate(${coords[0]}, ${coords[1]}) rotate(${particle.rotation}) scale(${particle.scale / Math.sqrt(transform.k)})`) 
-                .attr("opacity", 0.3) // Set opacity to 30%
+                .attr("opacity", 0.3)
                 .style("filter", "drop-shadow(0 1px 1px rgba(0,0,0,0.1))");
         });
     }
@@ -249,6 +260,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
     LOCATIONS.forEach(loc => {
       const [long, lat] = loc.coordinates;
       const coords = projection([long, lat]);
+      // If the location is outside the current projection/state view, don't draw it
       if (!coords) return;
 
       const isSelected = activeLocationId === loc.id;
@@ -325,7 +337,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
         {/* Collapsible Content */}
         {isLegendOpen && (
             <div className="pointer-events-auto border border-ink-300 bg-white/90 p-3 backdrop-blur shadow-sm rounded-sm max-w-[200px]">
-                <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2">Sector: CA Coast</h2>
+                <h2 className="text-ink-900 text-xs tracking-widest uppercase font-mono font-bold mb-2">Sector: {stateFips === '06' ? 'CA' : stateFips === '48' ? 'TX' : stateFips === '15' ? 'HI' : 'US'} Coast</h2>
                 <div className="flex flex-col space-y-1">
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
@@ -358,7 +370,7 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
                     </div>
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 border border-red-600 opacity-30"></div>
-                        <span className="text-[10px] font-mono text-ink-600">GEAR</span>
+                        <span className="text-[10px] font-mono text-ink-600">ENTANGLEMENTS</span>
                     </div>
                 </div>
             </div>
@@ -388,8 +400,8 @@ const MapViz: React.FC<MapVizProps> = ({ activeLocationId, onLocationSelect }) =
 
       <div className="absolute bottom-6 left-6 z-10 pointer-events-none text-[10px] font-mono text-ink-400 bg-white/80 p-1 rounded">
          ZOOM: {transform.k.toFixed(2)}x <br/>
-         LAT: {geoData ? '36.77 N' : '--'} <br/>
-         LNG: {geoData ? '119.41 W' : '--'}
+         FIPS: {stateFips} <br/>
+         LAT/LNG: {geoData ? 'TRACKING' : '--'}
       </div>
 
       <svg ref={svgRef} width={dimensions.width} height={dimensions.height} className="w-full h-full" />

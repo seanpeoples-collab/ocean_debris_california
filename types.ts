@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - types.ts
 export enum DebrisLevel {
   LOW = 'LOW',
   MODERATE = 'MODERATE',

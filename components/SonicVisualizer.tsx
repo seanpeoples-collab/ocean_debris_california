@@ -1,3 +1,4 @@
+// Ocean Debris Sonification Project - SonicVisualizer.tsx
 import React, { useRef, useEffect } from 'react';
 import { DebrisLevel } from '../types';
 
